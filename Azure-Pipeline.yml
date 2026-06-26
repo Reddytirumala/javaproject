@@ -1,0 +1,70 @@
+trigger:
+- main
+
+variables:
+  imageRepository: springboot-app
+  containerRegistry: myacr.azurecr.io
+  dockerRegistryServiceConnection: ACR-ServiceConnection
+  kubernetesServiceConnection: AKS-ServiceConnection
+  imageTag: $(Build.BuildId)
+
+pool:
+  vmImage: ubuntu-latest
+
+stages:
+
+- stage: Build
+  jobs:
+
+  - job: BuildJava
+
+    steps:
+
+    - task: Maven@3
+      inputs:
+        mavenPomFile: pom.xml
+        goals: clean package
+        publishJUnitResults: true
+
+    - task: Docker@2
+      inputs:
+        command: buildAndPush
+        repository: $(imageRepository)
+        dockerfile: Dockerfile
+        containerRegistry: $(dockerRegistryServiceConnection)
+        tags: |
+          $(imageTag)
+
+- stage: Deploy
+
+  dependsOn: Build
+
+  jobs:
+
+  - deployment: DeployToAKS
+
+    environment: Production
+
+    strategy:
+      runOnce:
+
+        deploy:
+
+          steps:
+
+          - task: HelmInstaller@1
+            inputs:
+              helmVersionToInstall: latest
+
+          - task: HelmDeploy@0
+            inputs:
+              connectionType: Kubernetes Service Connection
+              kubernetesServiceConnection: $(kubernetesServiceConnection)
+              namespace: production
+              command: upgrade
+              chartType: FilePath
+              chartPath: helm
+              releaseName: springboot
+              overrideValues: |
+                image.repository=$(containerRegistry)/$(imageRepository)
+                image.tag=$(imageTag)
