@@ -2,6 +2,10 @@ name: First Workflow
 
 on:
  workflow_dispatch:   #runs the workflow manually
+  inputs:
+      username:
+        description: "Enter name"
+        required: true
 
 jobs:
   basic-demo:
