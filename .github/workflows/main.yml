@@ -1,7 +1,32 @@
-name: KK FUNDA Demo Workflow
-on: push
-jobs:
-  build:
+name: Tirumala Github Workflow
+on:
+ push:
+   branches: [main]
+ Jobs:
+   build-job:
+    name: Build Stage
     runs-on: ubuntu-latest
+
     steps:
-      - run: echo "Hello Tirumala!"
+      - name: checkout code
+        uses: actions/checkout@v4
+
+      - name: install node js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: install dependencies
+        run: npm install
+
+      - name: build app
+        run: npm run build        
+  test-job:
+   name: testing stage
+   runs-on: ubuntu-latets
+   needs: build-job
+   steps:
+      - name: checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Tests
+        run: npm test
