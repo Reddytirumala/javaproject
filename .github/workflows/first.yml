@@ -18,9 +18,18 @@ jobs:
 
       - name: List current directory
         run: ls -ltr
-
+  
       - name: Print current user
         run: whoami
 
       - name: Print date and time
         run: date
+        
+      - name: Create file
+        run: echo "Hello from KK FUNDA" > output.txt
+    
+      - name: Upload file
+        uses: actions/upload-artifact@v4
+        with:
+          name: my-output
+          path: output.txt
